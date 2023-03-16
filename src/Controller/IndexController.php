@@ -1,8 +1,9 @@
 <?php
 namespace App\Controller;
 use App\Entity\Article;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Form\ArticleType;
 Use Symfony\Component\Routing\Annotation\Route;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -36,17 +37,15 @@ class IndexController extends AbstractController
     #[Route('/articles/create', name: 'new_article',methods: ["POST","GET"])]
     public function new(Request $request,FormFactoryInterface $formFactory)
     {
-    $article = new Article();
-    $form =  $this->createFormBuilder($article)->add('nom', TextType::class)->add('prix', TextType::class)->add('save', SubmitType::class, array('label' => 'Créer'))->getForm();
-   
-    $form->handleRequest($request);
-    if($form->isSubmitted() && $form->isValid()) {
-        $article = $form->getData();
-        //$this->entityManager->getDoctrine()->getManager();
-        $this->entityManager->persist($article);
-        $this->entityManager->flush();
-        return $this->redirectToRoute('article_list');
-    }
+        $article = new Article();
+        $form = $this->createForm(ArticleType::class,$article);
+        $form->handleRequest($request);
+        if($form->isSubmitted() && $form->isValid()) {
+            $article = $form->getData();
+            $this->entityManager->persist($article);
+            $this->entityManager->flush();
+            return $this->redirectToRoute('article_list');
+        }
         return $this->render('articles/new.html.twig',['form' => $form->createView()]);
     }
 
@@ -55,19 +54,13 @@ class IndexController extends AbstractController
     public function edit(Request $request, $id,FormFactoryInterface $formFactory) {
         $article = new Article();
         $article = $this->entityManager->getRepository(Article::class)->find($id);
-    
-        $form = $this->createFormBuilder($article)
-        ->add('nom', TextType::class)
-        ->add('prix', TextType::class)
-        ->add('save', SubmitType::class, array('label' => 'Modifier'))->getForm();
-    
+        $form = $this->createForm(ArticleType::class,$article);
         $form->handleRequest($request);
         if($form->isSubmitted() && $form->isValid()) {
         $this->entityManager->flush();
-    
         return $this->redirectToRoute('article_list');
-        }  
-        return $this->render('articles/edit.html.twig', ['form' => $form->createView()]);
+        }
+        return $this->render('articles/edit.html.twig', ['form' =>$form->createView()]);
     }
         
 
